@@ -1,0 +1,432 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX 100
+#define BOBOT_TUGAS 0.3
+#define BOBOT_UTS   0.3
+#define BOBOT_UAS   0.4
+
+/* penyimpanan input */
+char  nim[MAX][20];
+char  nama[MAX][50];
+float tugas[MAX];
+float uts[MAX];
+float uas[MAX];
+float nilaiAkhir[MAX];
+char  huruf[MAX];
+int   jumlah = 0;
+
+
+/* Fungsi bantu */
+int   cariIndexNIM(char cari[]);
+int   samaTanpaKapital(char a[], char b[]);
+float bacaNilai(char label[]);
+void tampilBaris(int i);
+void tampilHeader();
+int nimValid(char s[]);
+
+/* Fitur */
+void tambahMahasiswa();      /* fitur 1: tambah          */
+void tampilMahasiswa();      /* fitur 1: tampil          */
+void updateMahasiswa();      /* fitur 1: update          */
+void hapusMahasiswa();       /* fitur 1: hapus           */
+void cariMahasiswa();        /* fitur 2: cari NIM/nama   */
+void inputNilai();           /* fitur 3: input nilai     */
+void hitungNilaiAkhir(int i);/* fitur 4: nilai akhir + huruf untuk 1 mahasiswa */
+void hitungSemua();          /* fitur 4: hitung semua mahasiswa */
+void tampilStatistik();      /* fitur 5: tertinggi + rata-rata */
+
+
+
+/* Menu */
+int main() {
+    int pilih;
+
+    do {
+        printf("\n=== SISTEM AKADEMIK MAHASISWA ===\n");
+        printf("1. Tambah mahasiswa\n");
+        printf("2. Tampilkan semua mahasiswa\n");
+        printf("3. Update mahasiswa\n");
+        printf("4. Hapus mahasiswa\n");
+        printf("5. Cari mahasiswa (NIM/nama)\n");
+        printf("6. Input nilai\n");
+        printf("7. Hitung nilai akhir semua mahasiswa\n");
+        printf("8. Mahasiswa tertinggi & rata-rata kelas\n");
+        printf("0. Keluar\n");
+        printf("Pilih: ");
+        scanf("%d", &pilih);
+
+        switch (pilih) {
+            case 1: tambahMahasiswa(); break;
+            case 2: tampilMahasiswa(); break;
+            case 3: updateMahasiswa(); break;
+            case 4: hapusMahasiswa();  break;
+            case 5: cariMahasiswa();   break;
+            case 6: inputNilai();      break;
+            case 7: hitungSemua();     break;
+            case 8: tampilStatistik(); break;
+            case 0: printf("Terima kasih.\n"); break;
+            default: printf("Pilihan tidak valid!\n");
+        }
+    } while (pilih != 0);
+
+    return 0;
+}
+
+/* FUNCTION */
+
+/*Kembalikan indeks mahasiswa dengan NIM tsb, atau -1 jika tidak ada.*/
+int cariIndexNIM(char cari[]) 
+{
+    int i;
+    for (i = 0; i < jumlah; i++)
+        if (strcmp(nim[i], cari) == 0) return i;
+    return -1;
+}
+
+/*  membandingkan dua string tanpa huruf besar/kecil. Kembalikan 1 jika sama, 0 jika beda.*/
+int samaTanpaKapital(char a[], char b[])
+{
+    int i;
+    if (strlen(a) != strlen(b)) 
+    {
+        return 0;
+    }
+    for (i = 0; i < strlen(a); i++) 
+    {
+        if (tolower(a[i]) != tolower(b[i])) 
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/* minta input dari user harus antara 0 - 100*/
+float bacaNilai(char label[]) 
+{
+    float n = 0;
+
+    do
+    {
+        printf("%s (0-100): ", label);
+        scanf("%f", &n);
+        if (n < 0 || n > 100)
+        {
+            printf ("nilai harus antara 0-100\n");
+        } 
+    } while (n < 0 || n > 100);
+    
+    return n;
+}
+/*fungsi menampilkan header*/
+void tampilHeader()
+{
+    printf("\n%-12s %-15s %6s %6s %6s %7s %s\n",
+           "NIM", "Nama", "Tugas", "UTS", "UAS", "Akhir", "Huruf");
+    printf("----------------------------------------------------------------\n");
+
+}
+/*fungsi menampilkan baris*/
+void tampilBaris(int i)
+{
+    printf("%-12s %-15s %6.1f %6.1f %6.1f %7.2f %c\n",
+    nim[i], nama[i], tugas[i], uts[i], uas[i], nilaiAkhir[i], huruf[i]);
+}
+int nimValid (char s[])
+{
+    int i;
+
+    if(strlen(s) != 9)
+    {
+        return 0;
+    }
+    for (i = 0; i < 9; i++)
+    {
+        if (!isdigit(s[i]))
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+    
+
+/* menambah, menghapus, menampilkan data */
+
+/* menambah data mahasiswa */
+void tambahMahasiswa() 
+{
+    if (jumlah >= MAX)
+    {
+        printf("Data penuh\n");
+        return;
+    }
+    char nimbaru[20];
+    printf("NIM (9 angka): ");
+    scanf("%s", nimbaru);
+
+    if (!nimValid(nimbaru))
+    {
+        printf("NIM harus 9 angka!!");
+        return;
+    }
+    if (cariIndexNIM(nimbaru) != -1)
+    {
+        printf("NIM sudah ada\n");
+        return;
+    }
+    strcpy (nim[jumlah], nimbaru);
+    printf("Nama (Nama depan): ");
+    scanf("%s", nama[jumlah]);
+
+    tugas[jumlah] = 0;
+    uts[jumlah] = 0;
+    uas[jumlah] = 0;
+    nilaiAkhir[jumlah] = 0;
+    huruf[jumlah] = '-';
+    jumlah++;
+    
+}
+
+/* menampilkan data mahasiswa */
+void tampilMahasiswa() 
+{
+    int i;
+    if(jumlah == 0)
+    {
+        printf("Data Kosong\n");
+        return;
+    }
+    tampilHeader();
+    
+    
+   for (i = 0; i < jumlah; i++) 
+    {
+        tampilBaris(i);
+    }
+}
+
+/*update data mahasiswa*/
+void updateMahasiswa() {
+    
+    char cari[20];
+    int i;
+
+    if (jumlah == 0) 
+    {
+        printf("Data masih kosong.\n");
+        return;
+    }
+
+    printf("Masukkan NIM yang akan diubah: ");
+    scanf("%s", cari);
+
+    i = cariIndexNIM(cari);
+    if (i == -1) 
+    {
+        printf("NIM tidak ditemukan.\n");
+        return;
+    }
+
+    printf("Nama lama : %s\n", nama[i]);
+    printf("Nama baru : ");
+    scanf("%s", nama[i]);
+
+    printf("Data berhasil diperbarui.\n");
+}
+
+
+/* hapus data mahasiswa */
+void hapusMahasiswa() 
+{
+    char cari[20];
+    int i, j;
+
+    if (jumlah == 0) 
+    {
+        printf("Data masih kosong.\n");
+        return;
+    }
+
+    printf("Masukkan NIM yang akan dihapus: ");
+    scanf("%s", cari);
+
+    i = cariIndexNIM(cari);
+    if (i == -1) 
+    {
+        printf("NIM tidak ditemukan.\n");
+        return;
+    }
+
+    for (j = i; j < jumlah - 1; j++) 
+    {
+        strcpy(nim[j], nim[j + 1]);
+        strcpy(nama[j], nama[j + 1]);
+        tugas[j] = tugas[j + 1];
+        uts[j] = uts[j + 1];
+        uas[j] = uas[j + 1];
+        nilaiAkhir[j] = nilaiAkhir[j + 1];
+        huruf[j] = huruf[j + 1];
+    }
+    jumlah--;
+
+    printf("Data berhasil dihapus.\n");
+}
+
+
+/* Pencarian mahasiswa */
+void cariMahasiswa() 
+{
+    int mode, i, ditemukan;
+    char keyword[50];
+
+    if (jumlah == 0) 
+    {
+        printf("Data masih kosong.\n");
+        return;
+    }
+
+    printf("Cari berdasarkan:\n1. NIM\n2. Nama\nPilih: ");
+    scanf("%d", &mode);
+
+    if (mode == 1) 
+    {
+        printf("Masukkan NIM: ");
+        scanf("%s", keyword);
+
+        i = cariIndexNIM(keyword);
+        if (i == -1) {
+            printf("Data tidak ditemukan.\n");
+        } else {
+            tampilHeader();
+            tampilBaris(i);
+        }
+    } 
+    else if (mode == 2) 
+    {
+        printf("Masukkan nama: ");
+        scanf("%s", keyword);
+
+        ditemukan = 0;
+        for (i = 0; i < jumlah; i++) 
+        {
+            if (samaTanpaKapital(nama[i], keyword))
+            {
+                if (ditemukan == 0) 
+                {
+                    tampilHeader();
+                }
+                tampilBaris(i);
+                ditemukan++;
+            }
+        }
+        if (ditemukan == 0) {
+            printf("Data tidak ditemukan.\n");
+        }
+    } 
+    else 
+    {
+        printf("Pilihan tidak valid!\n");
+    }
+}
+
+/* input nilai */
+void inputNilai() 
+{
+    
+    char cari[20];
+    int i;
+
+    if( jumlah == 0)
+    {
+        printf("data kosong\n");
+        return;
+    }
+    printf("Masukkan NIM :");
+    scanf("%s", cari);
+
+    i = cariIndexNIM(cari);
+    if ( i == -1)
+    {
+        printf("NIM tidak ditemukan..\n");
+        return;
+    }
+    tugas[i] = bacaNilai("Nilai Tugas");
+    uts[i] = bacaNilai("Nilai UTS");
+    uas[i] = bacaNilai("Nilai UAS");
+
+    hitungNilaiAkhir(i);
+    printf("Nilai akhir: %.2f (%c)\n", nilaiAkhir[i], huruf[i]);
+
+
+}
+
+/* hitung nilai akhir */
+void hitungNilaiAkhir(int i) 
+{
+    nilaiAkhir[i] = BOBOT_TUGAS * tugas[i]
+                  + BOBOT_UTS   * uts[i]
+                  + BOBOT_UAS   * uas[i];
+/*Pengelompokan huruf berdasarkan nilai akhir*/
+    if (nilaiAkhir[i] >= 85) 
+    {
+        huruf[i] = 'A';
+    } else if (nilaiAkhir[i] >= 70) 
+    {
+        huruf[i] = 'B';
+    } else if (nilaiAkhir[i] >= 55) 
+    {
+        huruf[i] = 'C';
+    } else if (nilaiAkhir[i] >= 40) 
+    {
+        huruf[i] = 'D';
+    } else {
+        huruf[i] = 'E';
+    }
+}
+
+/* hitung semua nilai */
+void hitungSemua() 
+{
+    int i;
+    if(jumlah == 0)
+    {
+        printf("Data Kosong..\n");
+        return;
+    }
+    for ( i = 0; i < jumlah; i++)
+    {
+        hitungNilaiAkhir(i);
+    }
+    printf("Nilai Akhir berhasil dihitung\n");
+}
+
+/* mencari nilai tertingi dan rata-rata */
+
+/* menampilkan statistik */
+void tampilStatistik() 
+{
+    int i, idxMax = 0;
+    float total = 0;
+
+    if (jumlah == 0) {
+        printf("Data masih kosong.\n");
+        return;
+    }
+
+    for (i = 0; i < jumlah; i++) {
+        total = total + nilaiAkhir[i];
+        if (nilaiAkhir[i] > nilaiAkhir[idxMax]) {
+            idxMax = i;
+        }
+    }
+
+    printf("\n--- Mahasiswa dengan nilai tertinggi ---\n");
+    tampilHeader();
+    tampilBaris(idxMax);
+
+    printf("\nRata-rata kelas: %.2f\n", total / jumlah);
+}
